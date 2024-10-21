@@ -1,0 +1,10 @@
+name: checkm
+channels:
+  - bioconda
+  - defaults
+dependencies:
+  - checkm-genome=1.2.2
+  - python=3.6
+  - hmmer=3.1b2
+  - pplacer=1.1.alpha19
+  - prodigal=2.6.3

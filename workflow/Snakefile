@@ -1,0 +1,385 @@
+#Developer: Maria Beatriz Walter Costa, waltercostamb@gmail.com
+
+#This pipeline extracts diverse features from bacterial genomes.
+#Check: https://github.com/waltercostamb/features_pipeline
+
+import json
+
+#Add variables of general use
+scripts				= "workflow/scripts"
+config_file_name		= "config/config.json"
+
+#Read variables from the specified config file
+with open(config_file_name, 'r') as config_file:
+    config_data = json.load(config_file)
+
+#Store variables from the loaded JSON data (config file)
+genomes 			= config_data["genomes"]
+input_folder			= config_data["input_folder"]
+K 				= int(config_data["K"])
+threads_gerbil 			= int(config_data["threads_gerbil"])
+threads_checkm 			= int(config_data["threads_checkm"])
+threads_emapper 		= int(config_data["threads_emapper"])
+emapper_seed_ortholog_evalue 	= int(config_data["emapper_seed_ortholog_evalue"])
+emapper_block_size 		= int(config_data["emapper_block_size"])
+emapper_db_dir                  = config_data["emapper_db_dir"]
+
+#Store variable (output folder)
+output_features			= "results"
+
+#Read the list of genome files
+genomeID_lst = []
+fh_in = open(genomes, 'r')
+for line in fh_in:
+    line = line.rstrip()
+    genomeID_lst.append(line)
+
+
+#This is the main target rule. It guides which outputs the Snakefile should produce
+#
+#You should only add (uncomment) the final desired target per feature, otherwise Snakemake will give errors, due to the order of execution of rules.
+#For instance, to obtain gene-family_profiles.csv, Snakefile needs to run: 1) genes_checkm_lineage -> 2) gene_families_emapper -> 3) gene_families_table. So, do not add the "intermediate" outputs of 1 or 2, but only the output of 3.
+#
+#However, if you only want to obtain "{output_features}/bins/{id}/genes.faa" (rule genes_checkm_lineage), comment line below responsible for rule "gene_families_table": 
+#    "expand("{output_features}/gene-family_profiles.csv", output_features=output_features)," 
+#and uncomment:
+#    "expand("{output_features}/bins/{id}/genes.faa", id=genomeID_lst, output_features=output_features),"
+rule all:
+	input: 
+		#kmers_jellyfish
+		#expand("{output_features}/kmer_files/{id}_kmer{K}.txt", id=genomeID_lst, K=K, output_features=output_features),
+		#kmers_table
+		expand("{output_features}/kmer{K}_profiles.tsv", output_features=output_features, K=K),
+		#genes_checkm_lineage
+		#expand("{output_features}/bins/{id}/genes.faa", id=genomeID_lst, output_features=output_features),
+		#genes_checkm_qa
+		expand("{output_features}/bins/{id}/{id}-qa.txt", id=genomeID_lst, output_features=output_features),
+		#gene_families_emapper
+		#expand("{output_features}/proteins_emapper/{id}", id=genomeID_lst, output_features=output_features)
+		#gene_families_table
+		expand("{output_features}/gene-family_profiles.csv", output_features=output_features),
+		#isoelectric_point
+		#expand("{output_features}/isoelectric_point_files/{id}-iso_point.csv", id=genomeID_lst, output_features=output_features)
+		#isoelectric_point_table
+		expand("{output_features}/iso-points_profiles_known_orthologs.csv", output_features=output_features),
+		#prophages_jaeger
+		expand("{output_features}/prophages_jaeger/{id}_default_jaeger.tsv", output_features=output_features, id=genomeID_lst),
+		#genome_size
+		#expand("{output_features}/genome_sizes/{id}_genome_size.txt", output_features=output_features, id=genomeID_lst)
+		#genome_size_table
+		expand("{output_features}/genome_sizes.csv", output_features=output_features)
+		#hmmscan_profile - ON DEVELOPMENT
+        	#expand("{output_features}/hmm_scan/{id}-tbl.txt", id=genomeID_lst, output_features=output_features)
+
+#Rule to calculate genome sizes in nt
+rule genome_size:
+	input:
+		genome=f"{input_folder}/{{id}}.fasta"
+	output:
+		genome_sizes=f"{output_features}/genome_sizes/{{id}}_genome_size.txt"
+	resources:
+		threads=1
+	shell:
+		r"""
+		#Create output folder if it has not been done before
+		if [ ! -d {output_features} ]; then 
+			mkdir {output_features}
+		fi
+		
+		#Create output folder of Gerbil's output files
+		if [ ! -d {output_features}/genome_sizes ]; then 
+           		mkdir {output_features}/genome_sizes
+		fi
+
+		#Get genome size in bases
+		genome_size=$(grep -v ">" {input.genome} | tr -d '\n' | wc -c)
+		echo "{wildcards.id} $genome_size" > {output_features}/genome_sizes/tmp_{wildcards.id}
+		sed 's/  */\t/g' {output_features}/genome_sizes/tmp_{wildcards.id} > {output.genome_sizes} 
+
+		#Remove tmp file
+		rm {output_features}/genome_sizes/tmp_{wildcards.id}
+		"""
+
+#Rule to put all genome sizes into a unique table
+rule genome_size_table:
+	input:
+		genome_sizes=expand("{output_features}/genome_sizes/{id}_genome_size.txt", output_features=output_features, id=genomeID_lst)
+	output:
+		genome_sizes_table="{output_features}/genome_sizes.csv"
+	resources:
+		threads=1
+	shell:
+		r"""
+		echo -e "ID\tGenome_size(nt)" > {output.genome_sizes_table}
+		#Concatenate all genome size files into one CSV file
+		cat {output_features}/genome_sizes/* >> {output.genome_sizes_table}
+		"""
+
+#Rule to generate kmer counts using Jellyfish 
+rule kmers_jellyfish:
+	input:
+		#f"" is a syntax used to create formatted strings, also known as f-strings
+		genome=f"{input_folder}/{{id}}.fasta"
+	output:
+		kmers=f"{output_features}/kmer_files/{{id}}_kmer{K}.txt"
+	conda:
+		"envs/jellyfish.yaml"
+	params:
+		k=K,
+		t=threads_gerbil
+	resources:
+		threads=threads_gerbil
+	shell:
+		r"""
+		#Create output folder if it has not been done before
+		if [ ! -d {output_features} ]; then 
+			mkdir {output_features}
+		fi
+		
+		#Create output folder of Gerbil's output files
+		if [ ! -d {output_features}/kmer_files ]; then 
+           		mkdir {output_features}/kmer_files
+		fi
+
+		#Run Jellyfish and obtain output in Jellyfish format
+		jellyfish count -m {params.k} -s 100M -t {params.t} -C {input.genome} -o {output.kmers}.jf
+                #Obtain FASTA file of kmer counts from output above
+                jellyfish dump {output.kmers}.jf_0 > {output.kmers}
+                #Remove intermediate file
+                rm {output.kmers}.jf_0
+        	"""
+
+#Rule to generate a table from the kmer counts
+rule kmers_table:
+	input:
+		kmers=expand("{output_features}/kmer_files/{id}_kmer{K}.txt", id=genomeID_lst, output_features=output_features, K=K)
+	output:
+		"{output_features}/kmer{K}_profiles.tsv"
+	params:
+		k=K
+	resources:
+		threads=1,
+		mem_mb=224000
+	shell:
+		r"""
+		#Create list of files
+      	  	ls -lh {output_features}/kmer_files/*kmer{params.k}.txt | sed 's/  */\t/g' | cut -f9 | sed 's/{output_features}\/kmer_files\///g' | sed 's/_kmer{params.k}.txt//g' > list_kmer{params.k}_files.txt
+		
+		#Create tmp folder
+		if [ ! -d tmp ]; then 
+           		mkdir tmp
+		fi
+
+		#Run scripts to convert Gerbil output formats
+		python3 {scripts}/d_make_kmer_table.py list_kmer{params.k}_files.txt tmp {params.k} {output_features}
+		python3 {scripts}/d_append_agg_kmer_tables.py list_kmer{params.k}_files.txt {output_features}/kmer_files
+
+		mv {output_features}/kmer_files/kmer{params.k}_profiles.tsv {output_features}/.
+		rm -r tmp/
+		rm list_kmer{params.k}_files.txt
+        	"""
+
+#Rule to run checkm lineage_wf
+rule genes_checkm_lineage:
+	input:
+		genome_folder=expand("{input_folder}", input_folder=input_folder),
+		genomes=expand("{input_folder}/{id}.fasta", input_folder=input_folder, id=genomeID_lst)
+	output:
+		checkm=expand("{output_features}/bins/{id}/genes.faa", id=genomeID_lst, output_features=output_features)
+	params:
+		t=threads_checkm
+	resources:
+		threads=threads_checkm
+	conda:
+		"envs/checkm.yaml"
+	shell:
+		"""
+                #Create output folder if it has not been done before
+                if [ ! -d {output_features} ]; then
+                        mkdir {output_features}
+                fi
+
+                #Run checkm lineage only once
+                checkm lineage_wf -t {params.t} -x fasta {input.genome_folder} {output_features}
+		"""
+
+#Rule to run checkm_qa 
+rule checkm_qa:
+	input:
+		checkm="{output_features}/bins/{id}/genes.faa"
+	output:
+		checkm_qa="{output_features}/bins/{id}/{id}-qa.txt"
+	params:
+		t=threads_checkm
+	conda:
+		"envs/checkm.yaml"
+	resources:
+		threads=threads_checkm
+	shell:
+		r"""
+                #Run checkm qa for every ID
+                checkm qa -o 2 -f {output.checkm_qa} {output_features}/lineage.ms {output_features}
+		"""
+
+#Rule to run eggNOG emapper from genes
+rule gene_families_emapper:
+	input:
+		checkm="{output_features}/bins/{id}/genes.faa"
+	output:
+		emapper=directory("{output_features}/proteins_emapper/{id}")
+	params:
+		t=threads_emapper,
+		e=emapper_seed_ortholog_evalue,
+		b=emapper_block_size,
+		db=emapper_db_dir
+	resources:
+		threads=threads_emapper
+	conda:
+		"envs/emapper.yaml"
+	shell:
+		r"""
+		if [ ! -d "{output_features}/proteins_emapper" ]; then 
+			mkdir "{output_features}/proteins_emapper"
+		fi
+		
+		if [ ! -d "{output_features}/proteins_emapper/{wildcards.id}" ]; then 
+			mkdir "{output_features}/proteins_emapper/{wildcards.id}"
+		fi
+
+		#Substitute emapper run for a backup files copy (for debugging)
+	        #cp -r backup_proteins_emapper/{wildcards.id} {output_features}/proteins_emapper/.
+                emapper.py --cpu {params.t} --data_dir {params.db} -o {wildcards.id} --output_dir {output.emapper} -m diamond -i {input.checkm} --seed_ortholog_evalue {params.e} --go_evidence non-electronic --tax_scope auto --target_orthologs all --block_size {params.b}
+                """	
+
+#Rule to produce an ortholog table from the output of eggNOG emapper
+rule gene_families_table:
+	input:
+		emapper=expand("{output_features}/proteins_emapper/{id}", id=genomeID_lst, output_features=output_features)
+	output:
+		gene_profiles="{output_features}/gene-family_profiles.csv"
+	conda:
+		"envs/emboss.yaml"
+	resources:
+		threads=1
+	shell:
+		r"""
+                #Run script to make a table out of the emapper output from rule gene_families_emapper
+                python3 {scripts}/genes_table.py config/files.txt {output_features}/proteins_emapper/ {output_features}/
+                """
+
+#Rule to obtain IP from proteins
+rule isoelectric_point:
+	input:
+		checkm="{output_features}/bins/{id}/genes.faa"
+	output:
+		isoelectric_point="{output_features}/isoelectric_point_files/{id}-iso_point.csv"
+	resources:
+		threads=1
+	conda:
+		"envs/emboss.yaml"
+	shell:
+		r"""
+		#Create output folder
+		if [ ! -d {output_features}/isoelectric_point_files ]; then 
+           		mkdir {output_features}/isoelectric_point_files
+		fi
+
+		#Create output folder
+		if [ ! -d tmp_{wildcards.id} ]; then 
+           		mkdir tmp_{wildcards.id}
+		fi
+
+		#Split genes.faa
+		bash {scripts}/split_protein_file.sh {output_features}/bins/{wildcards.id}/genes.faa tmp_{wildcards.id}
+
+		#Enter in folder to avoid producing many tmp files in main folder
+		counter=1
+
+		(cd tmp_{wildcards.id}
+		#Loop for each split file to calculate isoelectric point
+		for file in ./*faa; do
+			python3 ../{scripts}/emboss_pepstats.py --email jena@email.de --sequence "$file" --quiet --outfile {wildcards.id}-"$counter"
+			((counter++))
+		done
+		cd ..
+		)
+
+		#Cat all outputs into one file
+		cat tmp_{wildcards.id}/{wildcards.id}*.out.txt > {output_features}/isoelectric_point_files/{wildcards.id}-emboss.out
+
+		#Extract protein names and isoelectric points and save into output file 
+		python3 {scripts}/extract_isoeletric-point.py {output_features}/isoelectric_point_files/{wildcards.id}-emboss.out > {output_features}/isoelectric_point_files/{wildcards.id}-iso_point.csv
+
+		#Remove unnecessary output from emboss
+		rm -r tmp_{wildcards.id} 
+		"""
+
+#Rule to obtain tables of IP of proteins: one table with known eggNOG emapper orthologs and another table with those plus emapper's un-annotated proteins
+rule isoelectric_point_table:
+	input:
+		isoelectric_point=expand("{output_features}/isoelectric_point_files/{id}-iso_point.csv", id=genomeID_lst, output_features=output_features),
+		emapper=expand("{output_features}/proteins_emapper/{id}", id=genomeID_lst, output_features=output_features)
+	output:
+		iso_profiles="{output_features}/iso-points_profiles_known_orthologs.csv"
+	resources:
+		threads=1
+	conda:
+		"envs/emboss.yaml"
+	shell:
+		r"""
+                #Run script to make a table out of the EMBOSS stats output from rule isoelectric_point
+                python3 {scripts}/iso-point_table.py {genomes} {output_features}/proteins_emapper/ {output_features}/ {output_features}/isoelectric_point_files/
+                """
+
+#Rule to extract prophages from genomes using Jaeger
+rule prophages_jaeger:
+	input:
+		genome=f"{input_folder}/{{id}}.fasta"
+	output:
+		file=f"{output_features}/prophages_jaeger/{{id}}_default_jaeger.tsv"
+	conda:
+		"envs/jaeger.yaml"
+	resources:
+		threads=1
+	params:
+		output_dir=f"{output_features}/prophages_jaeger"
+	shell:
+		r"""
+		#Create output folder if it has not been done before
+		if [ ! -d {output_features} ]; then 
+			mkdir {output_features}
+		fi
+		
+		#Create output folder of Jaeger's output files
+		if [ ! -d {output_features}/kmer_files ]; then 
+           		mkdir {output_features}/kmer_files
+		fi
+
+		#Run tool
+        	Jaeger -i {input.genome} -o {params.output_dir} --batch 128
+		"""
+
+#ON DEVELOPMENT
+#Finding HMM families from Pfam database using hmmscan (HMMER)
+#Adapted from wrapper: https://snakemake-wrappers.readthedocs.io/en/stable/wrappers/hmmer/hmmscan.html
+#rule hmmscan_profile:
+#    input:
+#	fasta=expand("{output_features}/bins/{id}/genes.faa", id=genomeID_lst, output_features=output_features),
+#        profile="database_tmp/Pfam-A.hmm.gz"
+#    output:
+        # only one of these is required
+#        tblout="test-prot-tbl.txt", # save parseable table of per-sequence hits to file <f>
+#        domtblout="test-prot-domtbl.txt", # save parseable table of per-domain hits to file <f>
+#        pfamtblout="test-prot-pfamtbl.txt", # save table of hits and domains to file, in Pfam format <f>
+#        outfile="test-prot-out.txt", # Direct the main human-readable output to a file <f> instead of the default stdout.
+#	resources:
+#		threads=1
+#    params:
+#        evalue_threshold=0.00001,
+        # if bitscore threshold provided, hmmscan will use that instead
+        #score_threshold=50,
+#        extra="",
+#    threads: 4
+#    wrapper:
+#        "v3.9.0/bio/hmmer/hmmscan"
+
