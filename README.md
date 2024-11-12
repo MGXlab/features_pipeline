@@ -65,11 +65,13 @@ ls genomes
 ls -1 genomes/*fasta | sed 's/\.fasta//g' | sed 's/genomes\///g' | grep -v '^$' > config/files.txt
 ```
 
-To use the pipeline with the example files, you can submit a job to the slurm queue with ```workflow/scripts/snakemake.sbatch```, as below. ```snakemake.sbatch``` is a script that runs snakemake (see section [snakefile.sbatch](https://github.com/waltercostamb/features_pipeline/tree/main?tab=readme-ov-file#snakefilesbatch) for details).
+To use the pipeline with the example files, you can submit a job to the slurm queue with ```workflow/scripts/snakemake.sbatch```, as below. ```snakemake.sbatch``` is a script that runs snakemake (see section [snakefile.sbatch](https://github.com/waltercostamb/features_pipeline/tree/main?tab=readme-ov-file#snakefilesbatch) for details).   
 
 ```
 sbatch workflow/scripts/snakefile.sbatch
 ```
+
+The first time you run the script above, it should take ~50 minutes in the draco cluster. Most of this time is used to build conda environments. After they have been built and you run the script a second time, it should be a lot faster.   
 
 If you are not using the draco cluster, you should adapt ```workflow/scripts/snakemake.sbatch``` to fit your cluster. Most importantly, change the conda activation command lines. 
 
