@@ -20,9 +20,12 @@ K 				= int(config_data["K"])
 threads_gerbil 			= int(config_data["threads_gerbil"])
 threads_checkm 			= int(config_data["threads_checkm"])
 threads_emapper 		= int(config_data["threads_emapper"])
+threads_infernal 		= int(config_data["threads_infernal"])
 emapper_seed_ortholog_evalue 	= int(config_data["emapper_seed_ortholog_evalue"])
 emapper_block_size 		= int(config_data["emapper_block_size"])
 emapper_db_dir                  = config_data["emapper_db_dir"]
+rfam_dir                  	= config_data["rfam_dir"]
+infernal_clan_path              = config_data["infernal_clan_path"]
 
 #Store variable (output folder)
 output_features			= "results"
@@ -67,7 +70,10 @@ rule all:
 		#genome_size
 		#expand("{output_features}/genome_sizes/{id}_genome_size.txt", output_features=output_features, id=genomeID_lst)
 		#genome_size_table
-		expand("{output_features}/genome_sizes.csv", output_features=output_features)
+		expand("{output_features}/genome_sizes.csv", output_features=output_features),
+		#infernal
+		expand("{output_features}/ncRNAs_infernal/{id}.cmscan", output_features=output_features, id=genomeID_lst)
+
 		#hmmscan_profile - ON DEVELOPMENT
         	#expand("{output_features}/hmm_scan/{id}-tbl.txt", id=genomeID_lst, output_features=output_features)
 
@@ -352,12 +358,43 @@ rule prophages_jaeger:
 		
 		#Create output folder of Jaeger's output files
 		if [ ! -d {output_features}/kmer_files ]; then 
-           		mkdir {output_features}/kmer_files
+           		mkdir {output_features}/prophages_jaeger
 		fi
 
 		#Run tool
         	Jaeger -i {input.genome} -o {params.output_dir} --batch 128
 		"""
+
+#Rule to annotate ncRNA classes from genomes using Infernal's cmscan
+rule infernal:
+	input:
+		genome=f"{input_folder}/{{id}}.fasta"
+	output:
+		file=f"{output_features}/ncRNAs_infernal/{{id}}.cmscan"
+	conda:
+		"envs/infernal.yaml"
+	resources:
+		threads=threads_infernal
+	params:
+		output_dir=f"{output_features}/ncRNAs_infernal",
+		clan_path=infernal_clan_path,
+		db=rfam_dir
+	shell:
+		r"""
+		#Create output folder if it has not been done before
+		if [ ! -d {output_features} ]; then 
+			mkdir {output_features}
+		fi
+		
+		#Create output folder of Jaeger's output files
+		if [ ! -d {output_features}/kmer_files ]; then 
+           		mkdir {output_features}/ncRNAs_infernal
+		fi
+
+		#Run tool
+        	cmscan --cpu {resources.threads} --rfam --cut_ga --nohmmonly --tblout={output.file} --fmt 2 --clanin {params.clan_path} {params.db} {input.genome} 1> /dev/null
+		"""
+
 
 #ON DEVELOPMENT
 #Finding HMM families from Pfam database using hmmscan (HMMER)
