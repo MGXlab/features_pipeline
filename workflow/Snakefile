@@ -395,6 +395,22 @@ rule infernal:
         	cmscan --cpu {resources.threads} --rfam --cut_ga --nohmmonly --tblout={output.file} --fmt 2 --clanin {params.clan_path} {params.db} {input.genome} 1> /dev/null
 		"""
 
+#Rule to produce an ortholog table from the output of CMscan of Infernal
+rule ncRNA_families_table:
+	input:
+		file=f"{output_features}/ncRNAs_infernal/{{id}}"
+	output:
+		ncRNA_profiles="{output_features}/ncRNA_profiles.csv"
+	conda:
+		"envs/emboss.yaml"
+	resources:
+		threads=1
+	shell:
+		r"""
+                #Run script to make a table out of the cmscan output from rule infernal
+                python3 {scripts}/ncRNA_table.py config/files.txt {output_features}/ncRNAs_infernal/ {output_features}/
+                """
+
 
 #ON DEVELOPMENT
 #Finding HMM families from Pfam database using hmmscan (HMMER)
