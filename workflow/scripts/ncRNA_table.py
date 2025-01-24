@@ -1,8 +1,7 @@
 #waltercostamb@gmail.com
 
-#This script converts eggnog emapper's output to a binary CSV table. See wikis: 
-# https://git.bia-christian.de/bia/lab_book_VEO/wiki/pipeline-of-features -> "Gene families"
-# https://git.bia-christian.de/bia/lab_book_VEO/wiki/features -> "Gene functions"-> "Format eggonog output for SVM"
+#This script converts Infernal's cmscan output to a binary CSV table. See wiki: 
+# https://git.bia-christian.de/bia/lab_book_VEO/wiki/pipeline-of-features-rules -> "Riboswitches"
 
 #USAGE: (i) activate conda below to use python3 packages in draco and (ii) run the script
 #conda activate bacterial_phenotypes
@@ -27,6 +26,7 @@ if len(sys.argv) < 4:
 
 #Get the second argument given in the command line and store it as input folder
 input_folder = sys.argv[2]
+#input_folder = '../../results/ncRNAs_infernal/'
 
 #Get the second argument given in the command line and store it as input folder
 output_folder = sys.argv[3]
@@ -37,85 +37,116 @@ file_of_list_files = sys.argv[1]
 #Load list of files given in the command line
 list_files = pd.read_csv(f'{file_of_list_files}', header = None, dtype=str)
 list_files = list_files[0].tolist()
+#with open('../../config/files.txt', 'r') as file:
+#    list_files = file.read().splitlines()
+#list_files
+
+print("Processing files...")
 
 cog2presence = {}
-line = 0
+cog2presence_binary = {}
 
-ts = time.time() 
-print("Processing files...", datetime.utcfromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S'))
-
-#For each file, extract the 5th col. for every line/protein (eggNOG_OGs), create matrix presence/absence of orthologs
+#Parsing irregularly-formatted cmscan file
 for file_name in list_files:
     
-    #print(file_name)
-    #Keep track of script, print processing of every 5th file
-    #if(line %50 == 0):
-    #    ts = time.time() 
-    #    print("Processing file number", line, datetime.utcfromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S'))
-    
-    #Open file, store 5th column
-    t = input_folder + str(file_name) + '/' + str(file_name) + '.emapper.annotations'
-    t2 = glob(t)
-    #print(t)
-    #print(t2)
-    file1 = str(t2[0])
+    #Prepare to open file
+    t = input_folder + str(file_name) + '.cmscan'
+    with open(t, 'r') as file:
+        # Read all file lines and store to list
+        lines = file.readlines()
+        # strip newline characters of lines
+        lines = [line.strip() for line in lines]
 
-    #print(file1) 
+    #Marker set to 0 unless it finds a line to skip
+    marker = 0
 
-    #Open file
-    df = pd.read_csv(file1, sep = '\t', skiprows=5, header = None)
-    #Store 5th column with the COGs (ortholog groups)
-    #cog_list elements looks like: 
-    #'COG4372@1|root,COG4372@2|Bacteria,4PM9B@976|Bacteroidetes,1J0UE@117747|Sphingobacteriia'
-    
-    cog_full_lst = df[4].tolist()
-    
-    #For each line/protein of the file, process it to store it in the presence/absence matrix
-    for cog_full_el in cog_full_lst:
-   
-        #print(cog_full_el)
+    #Go through every line to properly parse the lines
+    for line in lines:
+        
+        #If header is found, get the following column names, there should be 29 columns
+        if 'idx' in line:
 
-        #Avoid end of file lines begining with '#'
-        if not isinstance(cog_full_el, float):
+            colnames = ['idx' ,'target name', 'accession1', 'query name', 'accession2', 'clan name', 'mdl', 'mdl from', 'mdl to', 'seq from',
+                       'seq to', 'strand', 'trunc', 'pass', 'gc', 'bias', 'score', 'E-value', 'inc', 'olp', 
+                       'anyidx', 'afrct1', 'afrct2', 'winidx', 'wfrct1', 'wfrct2', 'mdl len', 'seq len', 'description of target']
+
+            #Start df
+            df = pd.DataFrame(columns=colnames)
         
-            #extract the highest level of COG (2nd element)
-            cog_lst = cog_full_el.split('|')
-        
-            #remove extra string from 2nd element
-            cog = cog_lst[1].replace('root,', '')
-        
-            id_file = file_name
-            #print(cog_full_el,id_file)
-        
-            #Add info (ortholog's presence) to dictionary -> matrix
-            if(cog in cog2presence):
-                cog2presence[cog][id_file] = 1
-            else:
-                cog2presence[cog] = {id_file: 1}
-                
-    line = line + 1 
+        #If line starts with # skip it (except for the header, which has already been parsed above)
+        elif line.startswith('#'):
+            marker = 1
+        else:
+            # Split the line by one or more spaces (\s+), get first 28 elements
+            col_elements = re.split(r'\s+', line.strip())[:28]  # strip() removes any trailing/leading whitespaces
+            
+            #For 29th element get all elements and join them by space
+            pre_description = re.split(r'\s+', line.strip())[28:]
+            description = ' '.join(pre_description)
+            col_elements.append(description)
+            
+            # Add the first 29 elements as a new row in the DataFrame
+            df.loc[len(df)] = col_elements
+            # Drop un-wanted columns
+            df_final = df.copy()
+            df_final = df_final.drop(columns=['accession2', 'clan name', 'mdl', 'mdl from', 'mdl to', 
+                                   'pass', 'score', 'inc', 'olp', 
+                                   'anyidx', 'afrct1', 'afrct2', 'winidx', 'wfrct1', 'wfrct2', 'mdl len'])
     
-ts = time.time() 
-print("Data in dictionary", datetime.utcfromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S'))
+    #Filter for false positive hits of cmscan
+    df_final['bias'] = pd.to_numeric(df_final['bias'])
+    df_final = df_final[df_final['bias'] <= 50]
+    df_final['E-value'] = pd.to_numeric(df_final['E-value'])
+    df_final = df_final[df_final['E-value'] < 0.001]   
+    
+    #df_final.head()
+    #df_final.shape
+
+    # Get the value counts for the 'target name'/ncRNA column and convert it to a dictionary
+    target_name_counts = df_final['target name'].value_counts().to_dict()
+    #target_name_counts
+    
+    #For each ncRNA of the file, process it to store it in the presence/absence or count matrix cog2presence
+    for ncRNA in target_name_counts:
+           
+        id_file = file_name
+        
+        #Add info (ortholog's presence) to dictionary -> matrix
+        if(ncRNA in cog2presence):
+            cog2presence[ncRNA][id_file] = target_name_counts[ncRNA]
+            cog2presence_binary[ncRNA][id_file] = 1
+        else:
+            cog2presence[ncRNA] = {id_file: target_name_counts[ncRNA]}
+            cog2presence_binary[ncRNA] = {id_file: 1}
+
+#cog2presence
+
+print("Data in dictionary")
 
 #Convert to dataframe
 df_cog = pd.DataFrame.from_dict(cog2presence, orient='index')
+df_cog_binary = pd.DataFrame.from_dict(cog2presence_binary, orient='index')
 
-ts = time.time() 
-print("Data in dataframe", datetime.utcfromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S'))
+print("Data in dataframe")
 
 #Substitute NA for zero
 df_cog2 = df_cog.fillna(0)
+df_cog2_binary = df_cog_binary.fillna(0)
 
 #Convert data types from float to int
 n = len(df_cog.columns)
 df_cog = df_cog2.iloc[:, :n].astype(int)  
 
-ts = time.time() 
-print("Dataframe NA to 0", datetime.utcfromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S'))
+n_binary = len(df_cog_binary.columns)
+df_cog_binary = df_cog2_binary.iloc[:, :n_binary].astype(int)  
+
+print("Dataframe NA to 0")
+
+#df_cog
 
 #Save the dataframe to a CSV file
-df_cog.to_csv(output_folder + 'gene-family_profiles' + '.csv', index=True)
+df_cog.to_csv(output_folder + 'ncRNA_profiles_counts' + '.csv', index=True)
+df_cog_binary.to_csv(output_folder + 'ncRNA_profiles_binary' + '.csv', index=True)
 
-ts = time.time() 
-print("Data saved in file", output_folder +"gene-family_profiles.csv", datetime.utcfromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S'))
+print("Data saved in file", output_folder +"ncRNA_profiles_counts.csv")
+print("Data saved in file", output_folder +"ncRNA_profiles_binary.csv")
