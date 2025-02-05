@@ -72,8 +72,9 @@ rule all:
 		#genome_size_table
 		expand("{output_features}/genome_sizes.csv", output_features=output_features),
 		#infernal
-		expand("{output_features}/ncRNAs_infernal/{id}.cmscan", output_features=output_features, id=genomeID_lst)
-
+		#expand("{output_features}/ncRNAs_infernal/{id}.cmscan", output_features=output_features, id=genomeID_lst)
+		#ncRNA_families_table
+		expand("{output_features}/ncRNA_profiles_counts.csv", output_features=output_features)
 		#hmmscan_profile - ON DEVELOPMENT
         	#expand("{output_features}/hmm_scan/{id}-tbl.txt", id=genomeID_lst, output_features=output_features)
 
@@ -400,7 +401,7 @@ rule ncRNA_families_table:
 	input:
 		file=f"{output_features}/ncRNAs_infernal/{{id}}"
 	output:
-		ncRNA_profiles="{output_features}/ncRNA_profiles.csv"
+		ncRNA_profiles="{output_features}/ncRNA_profiles_counts.csv"
 	conda:
 		"envs/emboss.yaml"
 	resources:
