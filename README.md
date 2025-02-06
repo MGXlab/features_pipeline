@@ -129,6 +129,10 @@ results/
 │   ├── 743966_kmer9.txt
 │   └── GCA_900660695_kmer9.txt
 ├── lineage.ms
+├── ncRNAs_infernal
+│   ├── 1266999.cmscan
+│   ├── 743966.cmscan
+│   └── GCA_900660695.cmscan
 ├── ncRNA_profiles_binary.csv
 ├── ncRNA_profiles_counts.csv
 ├── prophages_jaeger
