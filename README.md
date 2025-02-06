@@ -87,23 +87,68 @@ ls genomes/
 If you run the example input, you will obtain their [kmer profiles](https://github.com/waltercostamb/features_pipeline/tree/main?tab=readme-ov-file#kmers), eggNOG [gene families](https://github.com/waltercostamb/features_pipeline/tree/main?tab=readme-ov-file#gene-families), genome/contig/MAG quality reports from CheckM, [isoelectric points of proteins](https://github.com/waltercostamb/features_pipeline/tree/main?tab=readme-ov-file#isoelectric-points-of-proteins) and [identified prophages](https://github.com/waltercostamb/features_pipeline/tree/main?tab=readme-ov-file#prophages). For the example files, the folder tree of results follows below. For specific outputs of each rule, consult section [Available features](https://github.com/waltercostamb/features_pipeline/tree/main?tab=readme-ov-file#available-features).  
 
 ```
-results
+results/
 ├── bins
 │   ├── 1266999
+│   │   ├── 1266999-qa.txt
+│   │   ├── genes.faa
+│   │   ├── genes.gff
+│   │   ├── hmmer.analyze.txt
+│   │   └── hmmer.tree.txt
 │   ├── 743966
+│   │   ├── 743966-qa.txt
+│   │   ├── genes.faa
+│   │   ├── genes.gff
+│   │   ├── hmmer.analyze.txt
+│   │   └── hmmer.tree.txt
 │   └── GCA_900660695
+│       ├── GCA_900660695-qa.txt
+│       ├── genes.faa
+│       ├── genes.gff
+│       ├── hmmer.analyze.txt
+│       └── hmmer.tree.txt
+├── checkm.log
+├── gene-family_profiles.csv
+├── genome_sizes
+│   ├── 1266999_genome_size.txt
+│   ├── 743966_genome_size.txt
+│   └── GCA_900660695_genome_size.txt
+├── genome_sizes.csv
 ├── isoelectric_point_files
-├── jaeger
+│   ├── 1266999-emboss.out
+│   ├── 1266999-iso_point.csv
+│   ├── 743966-emboss.out
+│   ├── 743966-iso_point.csv
+│   ├── GCA_900660695-emboss.out
+│   └── GCA_900660695-iso_point.csv
+├── iso-points_profiles_all_genes.csv
+├── iso-points_profiles_known_orthologs.csv
+├── kmer9_profiles.tsv
 ├── kmer_files
+│   ├── 1266999_kmer9.txt
+│   ├── 743966_kmer9.txt
+│   └── GCA_900660695_kmer9.txt
+├── lineage.ms
+├── ncRNA_profiles_binary.csv
+├── ncRNA_profiles_counts.csv
+├── prophages_jaeger
+│   ├── 1266999_default_jaeger.tsv
+│   ├── 743966_default_jaeger.tsv
+│   └── GCA_900660695_default_jaeger.tsv
 ├── proteins_emapper
 │   ├── 1266999
+│   │   ├── 1266999.emapper.annotations
+│   │   ├── 1266999.emapper.hits
+│   │   └── 1266999.emapper.seed_orthologs
 │   ├── 743966
+│   │   ├── 743966.emapper.annotations
+│   │   ├── 743966.emapper.hits
+│   │   └── 743966.emapper.seed_orthologs
 │   └── GCA_900660695
+│       ├── GCA_900660695.emapper.annotations
+│       ├── GCA_900660695.emapper.hits
+│       └── GCA_900660695.emapper.seed_orthologs
 └── storage
-    ├── aai_qa
-    │   ├── 1266999
-    │   └── 743966
-    └── tree
 ```
 
 ## Using the pipeline with your data
