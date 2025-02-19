@@ -5,7 +5,7 @@
 #SBATCH --cpus-per-task=1
 #SBATCH --hint=nomultithread
 #SBATCH --partition=long
-#SBATCH --mem=10G
+#SBATCH --mem=15G
 
 #Unload any active module
 module purge
