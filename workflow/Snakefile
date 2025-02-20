@@ -255,8 +255,7 @@ rule gene_families_emapper:
 
 		#Substitute emapper run for a backup files copy (for debugging)
 	        #cp -r backup_proteins_emapper/{wildcards.id} {output_features}/proteins_emapper/.
-                emapper.py --cpu {params.t} --data_dir {params.db} -o {wildcards.id} --output_dir {output.emapper} -m diamond -i {input.checkm} --seed_ortholog_evalue {params.e} --go_evidence non-electronic --tax_scope auto --target_orthologs all
-		#emapper.py --cpu {params.t} --data_dir {params.db} -o {wildcards.id} --output_dir {output.emapper} -m diamond -i {input.checkm} --seed_ortholog_evalue {params.e} --go_evidence non-electronic --tax_scope auto --target_orthologs all --block_size {params.b
+		emapper.py --cpu {params.t} --data_dir {params.db} -o {wildcards.id} --output_dir {output.emapper} -m diamond -i {input.checkm} --seed_ortholog_evalue {params.e} --go_evidence non-electronic --tax_scope auto --target_orthologs all --block_size {params.b}
                 """	
 
 #Rule to produce an ortholog table from the output of eggNOG emapper
