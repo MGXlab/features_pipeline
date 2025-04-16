@@ -15,6 +15,7 @@ Within the pipeline the following software are used:
 - EMBOSS pepstats: https://www.ebi.ac.uk/jdispatcher/docs/
 - EggNOG emapper: https://github.com/eggnogdb/eggnog-mapper
 - Jaeger: https://github.com/Yasas1994/Jaeger
+- Infernal: http://eddylab.org/infernal/
 
 # Installation
 
