@@ -35,11 +35,14 @@ If you are using this pipeline in the draco high-performance cluster and are par
 
 After cloning the repository, you need to download the database required by EggNOG emapper:
 
-- Install EggNOG emapper: https://github.com/eggnogdb/eggnog-mapper/wiki/eggNOG-mapper-v2.1.5-to-v2.1.12#installation
-- Download the database with ```download_eggnog_data.py``` following: https://github.com/eggnogdb/eggnog-mapper/wiki/eggNOG-mapper-v2.1.5-to-v2.1.12#setup This should download a DB of ~50 GB
-- Change file ```config/config.json``` to update parameter "emapper_db_dir". This parameter contains the path to the eggnog database. The default is ```/work/groups/VEO/databases/emapper/v20230620```
+- Install [EggNOG emapper](https://github.com/eggnogdb/eggnog-mapper/wiki/eggNOG-mapper-v2.1.5-to-v2.1.12#installation)
+- Download the database of ~50GB with ```download_eggnog_data.py``` following [this link](https://github.com/eggnogdb/eggnog-mapper/wiki/eggNOG-mapper-v2.1.5-to-v2.1.12#setup)
+- Change file ```config/config.json``` to update parameter "emapper_db_dir". This parameter contains the path to the eggnog database
 
-You will also need to download the [Rfam database](https://ftp.ebi.ac.uk/pub/databases/Rfam/CURRENT/) of covariance models of ncRNA families.
+You will also need to download the database required by cmscan (of Infernal):
+
+- Download the [Rfam database](https://ftp.ebi.ac.uk/pub/databases/Rfam/CURRENT/) (~7.5 GB) of covariance models of ncRNA families
+- Change file ```config/config.json``` to update parameter "infernal_clan_path", which contains the path to the database
 
 ## Dependencies
 
