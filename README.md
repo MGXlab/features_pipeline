@@ -85,10 +85,15 @@ ls genomes/
 1266999.fasta  743966.fasta  GCA_900660695.fasta
 ```
 
-If you run the example input, you will obtain their [kmer profiles](https://github.com/waltercostamb/features_pipeline/tree/main?tab=readme-ov-file#kmers), eggNOG [gene families](https://github.com/waltercostamb/features_pipeline/tree/main?tab=readme-ov-file#gene-families), genome/contig/MAG quality reports from CheckM, [isoelectric points of proteins](https://github.com/waltercostamb/features_pipeline/tree/main?tab=readme-ov-file#isoelectric-points-of-proteins) and [identified prophages](https://github.com/waltercostamb/features_pipeline/tree/main?tab=readme-ov-file#prophages). For the example files, the folder tree of results follows below. For specific outputs of each rule, consult section [Available features](https://github.com/waltercostamb/features_pipeline/tree/main?tab=readme-ov-file#available-features).  
+If you run the example input, you will obtain their [kmer profiles](https://github.com/waltercostamb/features_pipeline/tree/main?tab=readme-ov-file#kmers), eggNOG [gene families](https://github.com/waltercostamb/features_pipeline/tree/main?tab=readme-ov-file#gene-families), genome/contig/MAG quality reports from CheckM, [isoelectric points of proteins](https://github.com/waltercostamb/features_pipeline/tree/main?tab=readme-ov-file#isoelectric-points-of-proteins), [identified prophages](https://github.com/waltercostamb/features_pipeline/tree/main?tab=readme-ov-file#prophages), genome sizes, isoelectric points of proteins, aminoacid frequencies and Rfam ncRNA families. For the example files, the folder tree of results follows below. For specific outputs of each rule, consult section [Available features](https://github.com/waltercostamb/features_pipeline/tree/main?tab=readme-ov-file#available-features).  
 
 ```
 results/
+├── aa_frequencies
+│   ├── 1266999.csv
+│   ├── 743966.csv
+│   └── GCA_900660695.csv
+├── aa_frequencies.csv
 ├── bins
 │   ├── 1266999
 │   │   ├── 1266999-qa.txt
@@ -111,6 +116,10 @@ results/
 ├── checkm.log
 ├── gene-family_profiles.csv
 ├── genome_sizes
+│   ├── 1266999_genome_size.txt
+│   ├── 743966_genome_size.txt
+│   └── GCA_900660695_genome_size.txt
+├── genome_sizes.csv
 │   ├── 1266999_genome_size.txt
 │   ├── 743966_genome_size.txt
 │   └── GCA_900660695_genome_size.txt
