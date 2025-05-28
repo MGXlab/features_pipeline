@@ -330,3 +330,10 @@ Rules: genes_checkm and isoelectric_point.
 ## Prophages
 
 Phage genomes are identified in the prokaryotic genomes using Jager. Rule: prophages_jaeger.
+
+## Other features
+
+Other available features are:
+
+- Rfam ncRNA families
+- Aminoacid frequencies of CDS genes predicted by prodigal/CheckM
