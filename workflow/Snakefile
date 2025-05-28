@@ -74,7 +74,11 @@ rule all:
 		#infernal
 		#expand("{output_features}/ncRNAs_infernal/{id}.cmscan", output_features=output_features, id=genomeID_lst)
 		#ncRNA_families_table
-		expand("{output_features}/ncRNA_profiles_counts.csv", output_features=output_features)
+		expand("{output_features}/ncRNA_profiles_counts.csv", output_features=output_features),
+		#aa_frequency
+		#expand("{output_features}/aa_frequencies/{id}.csv", output_features=output_features, id=genomeID_lst)
+		#aa_frequency_table
+		expand("{output_features}/aa_frequencies.csv", output_features=output_features)
 		#hmmscan_profile - ON DEVELOPMENT
         	#expand("{output_features}/hmm_scan/{id}-tbl.txt", id=genomeID_lst, output_features=output_features)
 
@@ -412,6 +416,47 @@ rule ncRNA_families_table:
                 python3 {scripts}/ncRNA_table.py config/files.txt {output_features}/ncRNAs_infernal/ {output_features}/
                 """
 
+#Rule to get aminoacid frequencies from proteomes
+rule aa_frequency:
+	input:
+		proteome=f"{output_features}/bins/{{id}}/genes.faa"
+	output:
+		file=f"{output_features}/aa_frequencies/{{id}}.csv"
+	conda:
+		"envs/biopython.yaml"
+	resources:
+		threads=1
+	shell:
+		r"""
+		#Create output folder if it has not been done before
+		if [ ! -d {output_features} ]; then 
+			mkdir {output_features}
+		fi
+		
+		#Create output folder of for aminoacid frequencies per genome/proteome
+		if [ ! -d {output_features}/aa_frequencies ]; then 
+           		mkdir {output_features}/aa_frequencies
+		fi
+
+		#Run script
+        	python3 {scripts}/aa_frequency.py {input.proteome} > {output.file}
+		"""
+
+#Rule to produce an aminoacid frequency table from the output of rule aa_frequency
+rule aa_frequency_table:
+	input:
+		file=expand("{output_features}/aa_frequencies/{id}.csv", id=genomeID_lst, output_features=output_features)
+	output:
+		aa_table="{output_features}/aa_frequencies.csv"
+	conda:
+		"envs/emboss.yaml"
+	resources:
+		threads=1
+	shell:
+		r"""
+                #Run script to make a table out of the output from rule aa_frequencies
+                python3 {scripts}/aa_table.py config/files.txt {output_features}/aa_frequencies/ {output_features}/
+                """
 
 #ON DEVELOPMENT
 #Finding HMM families from Pfam database using hmmscan (HMMER)
