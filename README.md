@@ -25,7 +25,7 @@ The first step to use the pipeline is to clone and access the GIT repository:
 
 ```
 #Clone using https
-git clone https://github.com/waltercostamb/features_pipeline.git
+git clone https://github.com/MGXlab/features_pipeline.git
 ```
 You could clone the repository using something else from https. To know what is the best option for you, consult your admin.
 
