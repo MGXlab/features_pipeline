@@ -70,15 +70,15 @@ ls genomes
 ls -1 genomes/*fasta | sed 's/\.fasta//g' | sed 's/genomes\///g' | grep -v '^$' > config/files.txt
 ```
 
-To use the pipeline with the example files, you can submit a job to the slurm queue with ```workflow/scripts/snakemake.sbatch```, as below. ```snakemake.sbatch``` is a script that runs snakemake (see section [snakefile.sbatch](https://github.com/waltercostamb/features_pipeline/tree/main?tab=readme-ov-file#snakefilesbatch) for details).   
+To use the pipeline with the example files in a slurm cluster, you can submit a job to the queue with ```workflow/scripts/snakemake.sbatch```, as below. ```snakemake.sbatch``` is a script that runs snakemake in a slurm system (see section [snakefile.sbatch](https://github.com/waltercostamb/features_pipeline/tree/main?tab=readme-ov-file#snakefilesbatch) for details). If you have another type of system, you should adapt the script.   
 
 ```
 sbatch workflow/scripts/snakefile.sbatch
 ```
 
-The first time you run the script above, it should take at least 1 hour in the draco cluster. Most of this time is used to build conda environments. After they have been built and you run the script a second time, it should be a lot faster.   
+The first time you run the script above, it should take at least 3 hours in the draco cluster. Most of this time is used to build conda environments. After they have been built, and you run the script a second time, it should be a lot faster.   
 
-If you are not using the draco cluster, you should adapt files ```workflow/scripts/snakemake.sbatch``` (make sure to change the conda activation command lines) and ```config/config.json``` with information appropriate your cluster. 
+If you are not using the draco cluster, you should adapt files ```workflow/scripts/snakemake.sbatch``` (make sure to change the conda activation command lines) and ```config/config.json``` with information appropriate to your cluster. 
 
 ## Expected output
 
@@ -89,7 +89,7 @@ ls genomes/
 1266999.fasta  743966.fasta  GCA_900660695.fasta
 ```
 
-If you run the example input, you will obtain their [kmer profiles](https://github.com/waltercostamb/features_pipeline/tree/main?tab=readme-ov-file#kmers), eggNOG [gene families](https://github.com/waltercostamb/features_pipeline/tree/main?tab=readme-ov-file#gene-families), genome/contig/MAG quality reports from CheckM, [isoelectric points of proteins](https://github.com/waltercostamb/features_pipeline/tree/main?tab=readme-ov-file#isoelectric-points-of-proteins), [identified prophages](https://github.com/waltercostamb/features_pipeline/tree/main?tab=readme-ov-file#prophages), genome sizes, isoelectric points of proteins, aminoacid frequencies and Rfam ncRNA families. For the example files, the folder tree of results follows below. For specific outputs of each rule, consult section [Available features](https://github.com/waltercostamb/features_pipeline/tree/main?tab=readme-ov-file#available-features).  
+If you run the example input, you will obtain their [kmer profiles](https://github.com/waltercostamb/features_pipeline/tree/main?tab=readme-ov-file#kmers), eggNOG [gene families](https://github.com/waltercostamb/features_pipeline/tree/main?tab=readme-ov-file#gene-families), genome/contig/MAG quality reports from CheckM, [isoelectric points of proteins](https://github.com/waltercostamb/features_pipeline/tree/main?tab=readme-ov-file#isoelectric-points-of-proteins), [identified prophages](https://github.com/waltercostamb/features_pipeline/tree/main?tab=readme-ov-file#prophages), genome sizes, isoelectric points of proteins, aminoacid frequencies and Rfam ncRNA families. For the example files, the folder tree of results follows below.  
 
 ```
 results/
@@ -197,45 +197,13 @@ vim workflow/scripts/snakefile.sbatch
 
 ## snakefile.sbatch
 
-File ```workflow/scripts/snakefile.sbatch``` (see content below) is a script that runs the snakemake pipeline. It contains information for the slurm cluster. If you submit this script to slurm, it will act as a *master* by sending small jobs to the queue corresponding to individual rules of the pipeline. The line below contains parameters of Snakemake: ```jobs 50``` indicates how many jobs the *master* script will send to slurm at the same time; ```--profile simple``` indicates the folder containing the configuration file for the cluster.  
-
-```
-#Command line to run the snakemake pipeline
-snakemake --use-conda --conda-frontend conda --configfile config/config.json --jobs 3 --profile simple``` 
-```
-
-Content of ```workflow/scripts/snakefile.sbatch```:
-
-```
-#!/bin/bash
-#SBATCH --job-name=smk_main
-#SBATCH --output=smk_main_%j.out
-#SBATCH --error=smk_main_%j.err
-#SBATCH --cpus-per-task=1
-#SBATCH --hint=nomultithread
-#SBATCH --partition=long
-#SBATCH --mem=5G
-
-#Unload any active module
-module purge
-#Load modules for snakemake (in the draco cluster)
-source /vast/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh
-#Activate snakemake conda environment
-conda activate snakemake_v7.24.0
-
-#Run Snakemake
-#snakemake --use-conda --conda-frontend conda --cores 1 --configfile config/config.json
-snakemake --use-conda --conda-frontend conda --configfile config/config.json --jobs 50 --profile simple
-
-#Deactivate conda environment
-conda deactivate
-```
+[```workflow/scripts/snakefile.sbatch```](https://github.com/waltercostamb/features_pipeline/blob/main/workflow/scripts/snakefile.sbatch) is a script that runs the snakemake pipeline and contains information for the slurm cluster. If you submit this script to slurm, it will act as a *master* by sending small jobs to the queue corresponding to individual rules of the pipeline. Parameter ```jobs 50``` indicates how many jobs the *master* script will send to slurm at the same time; ```--profile simple``` indicates the folder containing the configuration file for the cluster.    
 
 ## Choosing specific rules
 
-The default mode of Snakefile is to run all rules. If you want to run only one or a few specific rules, change the commented lines in `rule all` of the Snakefile.  
+The default mode of Snakefile is to run all rules. If you want to run only one or a few specific rules, change the commented lines in `rule all` of the ```workflow/[Snakefile](https://github.com/waltercostamb/features_pipeline/blob/main/workflow/Snakefile)```. 
 
-The default of rule all follows below. In this case all rules are active.
+An example of the `rule all` follows below. In this case, all rules are active.
 
 ```
 rule all:
@@ -260,7 +228,7 @@ rule all:
 		expand("{output_features}/prophages_jaeger/{id}_default_jaeger.tsv", output_features=output_features, id=genomeID_lst)
 ```
 
-As an example, say you only want to run Jellyfish to generate kmer counts, without creating any table. In this case, comment all lines and uncomment the line below "kmers_jellyfish". It should look like:
+As an example, say you only want to run Jellyfish to generate kmer counts, without creating any table. In this case, uncomment the line below "kmers_jellyfish" and comment all other lines. This should look like:
 
 ```
 rule all:
@@ -287,7 +255,7 @@ rule all:
 
 # Available features
 
-A directed acyclic graph (DAG) is shown for each feature. It describes the pipeline's hierarchy of rules. Below you see a simplified DAG with all implemented rules for one input genome.
+The directed acyclic graph (DAG) describes all features of the pipeline. It also shows the hierarchy of rules. Below you see a DAG of rules for one input genome.
 
 <p align="center">
   <img src="./figures/DAG_features_pipeline.png" alt="Alt Text" width="550"/>
