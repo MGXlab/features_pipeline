@@ -76,7 +76,7 @@ To use the pipeline with the example files in a slurm cluster, you can submit a 
 sbatch workflow/scripts/snakefile.sbatch
 ```
 
-The first time you run the script above, it should take at least 3 hours in the draco cluster. Most of this time is used to build conda environments. After they have been built, and you run the script a second time, it should be a lot faster.   
+The first time you run the script above, it should take ~2,5 hours in the draco cluster. Most of this time is used to build conda environments. After they have been built, and you run the script a second time, it should be a lot faster.   
 
 If you are not using the draco cluster, you should adapt files ```workflow/scripts/snakemake.sbatch``` (make sure to change the conda activation command lines) and ```config/config.json``` with information appropriate to your cluster. 
 
