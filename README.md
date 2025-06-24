@@ -21,11 +21,10 @@ Within the pipeline the following software are used:
 
 ## Cloning the repository
 
-The first step to use the pipeline is to clone and access the GIT repository:
+The first step to use the pipeline is to clone the repository:
 
 ```
 git clone https://github.com/MGXlab/features_pipeline.git
-cd features_pipeline
 ```
 
 ## Downloading databases
