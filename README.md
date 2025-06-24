@@ -36,12 +36,13 @@ After cloning the repository, you need to download the database required by EggN
 
 - Install [EggNOG emapper](https://github.com/eggnogdb/eggnog-mapper/wiki/eggNOG-mapper-v2.1.5-to-v2.1.13#user-content-Installation) following the [requirements](https://github.com/eggnogdb/eggnog-mapper/wiki/eggNOG-mapper-v2.1.5-to-v2.1.13#requirements) set up by the developers
 - Download the database of ~50GB with ```download_eggnog_data.py``` following [this link](https://github.com/eggnogdb/eggnog-mapper/wiki/eggNOG-mapper-v2.1.5-to-v2.1.13#setup)
-- Change file [```config/config.json```](https://github.com/MGXlab/features_pipeline/blob/main/config/config.json) to update parameter "emapper_db_dir", which contains the path to the eggnog database in your system
+- Change file [```config/config.json```](https://github.com/MGXlab/features_pipeline/blob/main/config/config.json) to update parameter "emapper_db_dir", which contains the path to this database in your system
 
-You will also need to download the database required by cmscan (of Infernal):
+You will also need to download and prepare the database required by cmscan (of Infernal):
 
-- Download the [Rfam database](https://ftp.ebi.ac.uk/pub/databases/Rfam/CURRENT/) (~7.5 GB) of covariance models of ncRNA families
-- Change file ```config/config.json``` to update parameter "infernal_clan_path", which contains the path to the database
+- Download file "Rfam.cm.gz" from the [Rfam database](https://ftp.ebi.ac.uk/pub/databases/Rfam/CURRENT/) (~7.5 GB) of covariance models of ncRNA families
+- Prepare the database for use by running cmpress of Infernal to compress and index the database (for that, follow the developer's [tutorial](http://eddylab.org/infernal/Userguide.pdf), "Step 2: compress and index the flatfile with cmpress", page 27)
+- Change file [```config/config.json```](https://github.com/MGXlab/features_pipeline/blob/main/config/config.json) to update parameter "infernal_clan_path", which contains the path to this database in your system
 
 ## Dependencies
 
