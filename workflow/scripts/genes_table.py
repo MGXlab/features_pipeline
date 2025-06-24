@@ -1,16 +1,10 @@
 #waltercostamb@gmail.com
 
-#This script converts eggnog emapper's output to a binary CSV table. See wikis: 
-# https://git.bia-christian.de/bia/lab_book_VEO/wiki/pipeline-of-features -> "Gene families"
-# https://git.bia-christian.de/bia/lab_book_VEO/wiki/features -> "Gene functions"-> "Format eggonog output for SVM"
+#This script converts eggnog emapper's output to a binary CSV table. 
 
 #USAGE: (i) activate conda below to use python3 packages in draco and (ii) run the script
 #conda activate bacterial_phenotypes
 #python3 SCRIPT FILE_LIST INPUT_FOLDER OUTPUT_FOLDER
-
-#To create FILE_LIST, you can use the command lines below:
-#$ls -lh INPUT_FOLDER/*annotations > pre_file_list.txt
-#$sed 's/  */\t/g' pre_file_list.txt | cut -f 9 | sed 's/\//\t/g' | cut -f3 > file_list.txt
 
 import warnings
 import re
@@ -82,7 +76,9 @@ for file_name in list_files:
             cog_lst = cog_full_el.split('|')
         
             #remove extra string from 2nd element
-            cog = cog_lst[1].replace('root,', '')
+            pre_cog = cog_lst[1].replace('root,', '')
+            #remove the NCBI tax ID
+            cog = pre_cog.split('@')[0]
         
             id_file = file_name
             #print(cog_full_el,id_file)
