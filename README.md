@@ -36,7 +36,7 @@ After cloning the repository, you need to download the database required by EggN
 
 - Install [EggNOG emapper](https://github.com/eggnogdb/eggnog-mapper/wiki/eggNOG-mapper-v2.1.5-to-v2.1.13#user-content-Installation) following the [requirements](https://github.com/eggnogdb/eggnog-mapper/wiki/eggNOG-mapper-v2.1.5-to-v2.1.13#requirements) set up by the developers
 - Download the database of ~50GB with ```download_eggnog_data.py``` following [this link](https://github.com/eggnogdb/eggnog-mapper/wiki/eggNOG-mapper-v2.1.5-to-v2.1.13#setup)
-- Change file ```config/config.json``` to update parameter "emapper_db_dir". This parameter contains the path to the eggnog database
+- Change file [```config/config.json```](https://github.com/MGXlab/features_pipeline/blob/main/config/config.json) to update parameter "emapper_db_dir", which contains the path to the eggnog database in your system
 
 You will also need to download the database required by cmscan (of Infernal):
 
