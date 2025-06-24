@@ -10,12 +10,12 @@ In this tutorial, you will learn how to use the pipeline with the example input 
 
 Within the pipeline the following software are used:
 
-- Jellyfish: https://github.com/gmarcais/Jellyfish
-- CheckM: https://github.com/Ecogenomics/CheckM
+- Jellyfish 1.1.12: https://github.com/gmarcais/Jellyfish
+- CheckM 1.2.2: https://github.com/Ecogenomics/CheckM
 - EMBOSS pepstats: https://www.ebi.ac.uk/jdispatcher/docs/
-- EggNOG emapper: https://github.com/eggnogdb/eggnog-mapper
-- Jaeger: https://github.com/Yasas1994/Jaeger
-- Infernal: http://eddylab.org/infernal/
+- EggNOG emapper 2.1.11: https://github.com/eggnogdb/eggnog-mapper
+- Jaeger 1.1.26: https://github.com/Yasas1994/Jaeger
+- Infernal 1.1.5: http://eddylab.org/infernal/
 
 # Installation
 
