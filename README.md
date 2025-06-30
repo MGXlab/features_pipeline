@@ -298,9 +298,12 @@ Rules: genes_checkm and isoelectric_point.
 
 Phage genomes are identified in the prokaryotic genomes using Jager. Rule: prophages_jaeger.
 
+## Rfam ncRNA families
+
+NcRNA families are identified with cmscan of Infernal. Only prokaryotic families are kept as an output of the pipeline. For this, a [list of archaeal families](https://github.com/Rfam/rfam-taxonomy/blob/master/domains/archaea.csv) and a [list of bacterial families](https://github.com/Rfam/rfam-taxonomy/blob/master/domains/bacteria.csv) are considered.
+
 ## Other features
 
 Other available features are:
 
-- Rfam ncRNA families
 - Aminoacid frequencies of CDS genes predicted by prodigal/CheckM
