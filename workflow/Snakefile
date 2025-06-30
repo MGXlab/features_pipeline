@@ -397,7 +397,12 @@ rule infernal:
 		fi
 
 		#Run tool
-        	cmscan --cpu {resources.threads} --rfam --cut_ga --nohmmonly --tblout={output.file} --fmt 2 --clanin {params.clan_path} {params.db} {input.genome} 1> /dev/null
+        	cmscan --cpu {resources.threads} --rfam --cut_ga --nohmmonly --tblout={output.file}.tmp --fmt 2 --clanin {params.clan_path} {params.db} {input.genome} 1> /dev/null
+
+		#Remove non-prokaryotic Rfam families from cmscan reports
+                python3 {scripts}/remove_families.py {output.file}.tmp {output.file}
+                #Remove intermediate file
+                rm {output.file}.tmp
 		"""
 
 #Rule to produce an ortholog table from the output of CMscan of Infernal
