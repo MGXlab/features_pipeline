@@ -128,7 +128,9 @@ for file_name in list_files:
             cog_lst = cog_full_el.split('|')
         
             #remove extra string from 2nd element
-            cog = cog_lst[1].replace('root,', '')
+            pre_cog = cog_lst[1].replace('root,', '')
+            #remove the NCBI tax ID
+            cog = pre_cog.split('@')[0]
 
             #Populate dictionary with COG and gene name. This will be used in the following code block
             name2cog[prot_name] = cog
