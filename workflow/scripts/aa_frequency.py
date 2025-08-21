@@ -15,7 +15,14 @@ aa_counter = Counter()
 # Read all sequences from the FASTA file
 with open(args.fasta_file, "r") as handle:
     for record in SeqIO.parse(handle, "fasta"):
-        aa_counter.update(str(record.seq))
+
+        #Remove stop signs '*' from the protein sequences, so that they do not get counted
+        #print(record.seq)
+        clean_sequence = str(record.seq).replace("*", "")
+        #print(clean_sequence)
+
+        aa_counter.update(str(clean_sequence))
+        #break
 
 # Total number of amino acids (excluding gaps or unknowns if needed)
 total_aas = sum(aa_counter.values())
@@ -28,3 +35,4 @@ for aa in sorted(aa_frequencies):
     print(f"{aa},{aa_frequencies[aa]:.4f}")
 
 #print(f"Total frequency sum: {sum(aa_frequencies.values()):.4f}")
+                                                       
