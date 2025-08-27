@@ -1,4 +1,4 @@
-# Snakemake workflow: Features Pipeline
+# Snakemake workflow: FxTractor
 
 This workflow extracts different genomic features from prokaryotic genomes. The input is a folder containing genomic FASTA files and the output are text files containing genomic features. Click on the [list of features](https://github.com/waltercostamb/features_pipeline/tree/main?tab=readme-ov-file#available-features) to see the available ones.  
 
